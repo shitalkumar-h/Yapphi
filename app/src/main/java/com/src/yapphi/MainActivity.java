@@ -14,7 +14,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.util.Log;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -64,21 +63,22 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
+    @SuppressLint({"SetJavaScriptEnabled", "HardwareIds"})
     @Override
     public void onResume() {
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
         super.onResume();
-        yapphiWebView = (WebView) findViewById(R.id.webview);
+        yapphiWebView = findViewById(R.id.webview);
         WebSettings webSettings = yapphiWebView.getSettings();
         webSettings.setJavaScriptEnabled(true);
         webSettings.setLoadWithOverviewMode(true);
         webSettings.setUseWideViewPort(true);
         yapphiWebView.setWebViewClient(new YapphiViewClient());
         yapphiWebView.setBackgroundColor(0xFF000000);
-        @SuppressLint("HardwareIds") String androidDeviceId = Settings.Secure.getString(getContentResolver(),Settings.Secure.ANDROID_ID);
+        @SuppressLint("HardwareIds") String androidDeviceId;
+        androidDeviceId = Settings.Secure.getString(getContentResolver(),Settings.Secure.ANDROID_ID);
         byte[] androidDeviceIdHash;
-        String androidDeviceIdHexString = null;
+        appURL = "https://app.yapphi.com";
         try {
             if(androidDeviceId!=null) {
                 MessageDigest md = MessageDigest.getInstance("SHA-256");
@@ -90,20 +90,11 @@ public class MainActivity extends AppCompatActivity {
                     if (hex.length() == 1) hexString.append('0');
                     hexString.append(hex);
                 }
-                androidDeviceIdHexString = hexString.toString();
+                String androidDeviceIdHexString = hexString.toString();
+                appURL = appURL + "/?para6="+androidDeviceIdHexString;
             }
         }
-        catch(Exception e) {
-            Log.e("Yapphi Alpha:","Error in encryption:"+e);
-        }
-        String hostURL = "https://app.yapphi.com";
-        if(androidDeviceIdHexString !=null) {
-            appURL = hostURL + "/?para6="+androidDeviceIdHexString;
-            Log.i("Yapphi URL","with Encryption:"+ appURL);
-        }
-        else {
-            appURL = hostURL + "/?para6="+androidDeviceId;
-            Log.i("Yapphi URL","without Encryption:"+ appURL);
+        catch(Exception ignored) {
         }
         registerReceiver(networkStateReceiver, new IntentFilter(android.net.ConnectivityManager.CONNECTIVITY_ACTION));
     }
